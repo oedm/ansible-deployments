@@ -21,7 +21,7 @@
     - name: Add Host to Inventory
       add_host:
         name: "localhost"
-        role: "{{ ec2_tags.tags.role.value }}"
+        role: "{{ ec2_tags.tags.role }}"
         groups: dynamic_hosts
 
 - hosts: dynamic_hosts
