@@ -1,8 +1,11 @@
 - hosts: localhost
   connection: local
-  gather_facts: true
+  gather_facts: false
   become: yes
   tasks:
+    - name: Gather ec2 facts
+      ec2_metadata_facts:
+
     - name: Gather local Tags
       ec2_tag:
         region: "{{ ansible_ec2_placement_region }}"
@@ -13,10 +16,17 @@
     - name: List tags
       debug:
         msg: "{{ item.key }} => {{ item.value }}"
-      with_dict: "{{ ec2_tags.tags }}
+      with_dict: "{{ ec2_tags.tags }}"
 
     - name: Add Host to Inventory
       add_host:
-        name: "{{ ansible_ec2_hostname }}"
-        groups: dynamic_host
-        tags:
+        name: "localhost"
+        role: "{{ ec2_tags.tags.role.value }}"
+        groups: dynamic_hosts
+
+- hosts: dynamic_hosts
+  gather_facts: true
+  connection: local
+  become: yes
+  roles:
+    - { role: jenkins, when: role == "jenkins" }
