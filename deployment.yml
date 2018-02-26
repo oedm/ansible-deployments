@@ -1,0 +1,13 @@
+- hosts: localhost
+  gather_facts: true
+  tasks:
+    - name: Gather local Tags
+      ec2_tag:
+        region: "{{ ansible_ec2_placement_region }}"
+        resource: "{{ ansible_ec2_instance_id}}"
+        state: list
+      register: ec2_tags
+
+    - name: List tags
+      debug:
+        msg: "{{ ec2_tags.tags.Name}} {{ec2_tags.tags.env}}"
