@@ -1,15 +1,36 @@
 ---
 
-- include: "{{ jenkins_install_via }}/install.yml"
+- name: "Install Java and GIT"
+  yum: name="java" state="present"
+  with_items:
+    - java
+    - git
+    - libselinux-python
+    - curl
 
-# Jenkins should not be running while we change the configuration
-# data, otherwise some files might be overwritten when it restarts
-- include: "{{ jenkins_install_via }}/stop.yml"
-- include: "configure-jenkins.yml"
+- name: "Add Jenkins repository"
+  get_url: url="http://pkg.jenkins-ci.org/redhat/jenkins.repo" dest="/etc/yum.repos.d/jenkins.repo"
 
-- include: "{{ jenkins_install_via }}/restart.yml"
-- include: "wait-for-start.yml"
-- include: "configure-plugins.yml"
+- name: "Import Jenkins key"
+  rpm_key: 
+    key: https://jenkins-ci.org/redhat/jenkins-ci.org.key
+    state: present
+    validate_certs: no
 
-- include: "configure-jobs.yml"
-- include: "{{ jenkins_after_config_jobs_file | default('empty.yml') }}"
+- name: "Install Jenkins"
+  yum:
+    name: jenkins
+    state: present
+
+- name: "Start Jenkins"
+  service: name="jenkins" state="started"
+
+- name: "Wait for Jenkins to come up"
+  uri:
+    url: "http://127.0.0.1:8080"
+    status_code: 200
+  register: result
+  until: result.status == 200
+  retries: 60
+  delay: 1
+
